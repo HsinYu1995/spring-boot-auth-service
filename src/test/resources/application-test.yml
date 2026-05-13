@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16:///authdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    private-key: classpath:keys/private.pem
+    public-key: classpath:keys/public.pem
+    access-token-expiration: 900000
+    refresh-token-expiration: 604800000
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+  mail:
+    from: test@example.com
+  base-url: http://localhost:8080

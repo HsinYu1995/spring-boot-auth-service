@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+logging:
+  level:
+    root: WARN
+    com.authservice: INFO
+  pattern:
+    console: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss}","level":"%level","logger":"%logger{36}","message":"%msg"}%n'
+
+app:
+  jwt:
+    private-key: ${JWT_PRIVATE_KEY_PATH}
+    public-key: ${JWT_PUBLIC_KEY_PATH}
+    access-token-expiration: ${JWT_ACCESS_EXPIRY:900000}
+    refresh-token-expiration: ${JWT_REFRESH_EXPIRY:604800000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGIN}
+  mail:
+    from: ${MAIL_FROM}
+  base-url: ${APP_BASE_URL}
