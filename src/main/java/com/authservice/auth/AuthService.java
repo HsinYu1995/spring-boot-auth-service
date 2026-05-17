@@ -1,6 +1,9 @@
 package com.authservice.auth;
 
-import com.authservice.auth.dto.*;
+import com.authservice.auth.dto.ForgotPasswordRequest;
+import com.authservice.auth.dto.LoginRequest;
+import com.authservice.auth.dto.RegisterRequest;
+import com.authservice.auth.dto.ResetPasswordRequest;
 import com.authservice.exception.AuthException;
 import com.authservice.exception.TokenException;
 import com.authservice.exception.UserAlreadyExistsException;
@@ -36,7 +39,7 @@ public class AuthService {
     private final JwtProperties jwtProperties;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthTokenPair register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new UserAlreadyExistsException("Email already registered");
         }
@@ -47,10 +50,10 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        return buildAuthResponse(user);
+        return buildAuthTokenPair(user);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthTokenPair login(LoginRequest request) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
@@ -62,16 +65,16 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        return buildAuthResponse(user);
+        return buildAuthTokenPair(user);
     }
 
     @Transactional
-    public AuthResponse refresh(RefreshTokenRequest request) {
+    public AuthTokenPair refresh(String rawRefreshToken) {
         String[] newRefreshTokenHolder = new String[1];
-        User user = refreshTokenService.validateAndRotate(request.refreshToken(), newRefreshTokenHolder);
+        User user = refreshTokenService.validateAndRotate(rawRefreshToken, newRefreshTokenHolder);
 
         String accessToken = jwtService.generateAccessToken(user);
-        return AuthResponse.of(accessToken, newRefreshTokenHolder[0], jwtProperties.getAccessTokenExpiration());
+        return new AuthTokenPair(accessToken, newRefreshTokenHolder[0], jwtProperties.getAccessTokenExpiration());
     }
 
     @Transactional
@@ -119,10 +122,10 @@ public class AuthService {
         refreshTokenService.revokeAllForUser(user);
     }
 
-    private AuthResponse buildAuthResponse(User user) {
+    private AuthTokenPair buildAuthTokenPair(User user) {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = refreshTokenService.createRefreshToken(user);
-        return AuthResponse.of(accessToken, refreshToken, jwtProperties.getAccessTokenExpiration());
+        return new AuthTokenPair(accessToken, refreshToken, jwtProperties.getAccessTokenExpiration());
     }
 
     private String hash(String token) {
