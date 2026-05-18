@@ -13,10 +13,17 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - MAIL_FROM=${MAIL_FROM}
       - APP_BASE_URL=${APP_BASE_URL}
-      - CORS_ALLOWED_ORIGIN=http://localhost
+      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
     volumes:
       - ./src/main/resources/keys/private.pem:/run/secrets/private.pem:ro
       - ./src/main/resources/keys/public.pem:/run/secrets/public.pem:ro
@@ -28,7 +35,9 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - auth-service
+      auth-service:
+        condition: service_healthy
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
@@ -43,6 +52,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:

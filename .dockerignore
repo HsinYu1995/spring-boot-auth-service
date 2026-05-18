@@ -1,0 +1,6 @@
+target/
+docs/
+.git
+.gitignore
+*.md
+src/main/resources/keys/
