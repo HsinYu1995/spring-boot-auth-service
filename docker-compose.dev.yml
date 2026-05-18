@@ -33,8 +33,6 @@ services:
       - ../../js/react/tinder-app/src:/app/src
     environment:
       - API_PROXY_TARGET=http://auth-service:8080
-    depends_on:
-      - auth-service
 
   postgres:
     image: postgres:16-alpine
