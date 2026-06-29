@@ -26,7 +26,7 @@ app:
     access-token-expiration: 900000
     refresh-token-expiration: 604800000
   cors:
-    allowed-origins: http://localhost:3000,http://localhost:4200
+    allowed-origins: http://localhost:5173,http://localhost:3000,http://localhost:4200
   mail:
     from: ${MAIL_USERNAME:your-email@gmail.com}
-  base-url: http://localhost:8080
+  base-url: http://localhost:5173

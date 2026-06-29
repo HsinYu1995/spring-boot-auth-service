@@ -1,0 +1,58 @@
+services:
+  auth-service:
+    build: .
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_URL=jdbc:postgresql://postgres:5432/authdb
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_PRIVATE_KEY_PATH=file:/run/secrets/private.pem
+      - JWT_PUBLIC_KEY_PATH=file:/run/secrets/public.pem
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM=${MAIL_FROM}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    volumes:
+      - ./src/main/resources/keys/private.pem:/run/secrets/private.pem:ro
+      - ./src/main/resources/keys/public.pem:/run/secrets/public.pem:ro
+
+  tinder-app:
+    build:
+      context: ../../js/react/tinder-app
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -13,6 +13,8 @@ target/
 
 # Environment & secrets
 .env
+src/main/resources/keys/private.pem
+src/main/resources/keys/public.pem
 
 # Logs
 *.log
